@@ -1,10 +1,13 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description"
+        content="Blake Culbertson's personal website, projects, and résumé.">
   <title>Blake Culbertson</title>
-  
+
   <style>
     :root {
       color-scheme: dark;
@@ -34,16 +37,60 @@
       color: #93c5fd;
     }
 
+    a:hover {
+      color: #bfdbfe;
+    }
+
     .links {
       display: flex;
       flex-direction: column;
       align-items: flex-start;
       gap: 20px;
-      flex-wrap: wrap;
       margin-top: 30px;
+    }
+
+    /* Visitor counter */
+    .visitor-counter {
+      margin-top: 60px;
+      padding-top: 20px;
+      border-top: 1px solid #334155;
+    }
+
+    .visitor-counter p {
+      margin: 0;
+    }
+
+    .counter-label {
+      font-size: 1rem;
+    }
+
+    #visitor-count {
+      color: #93c5fd;
+      font-size: 1.4rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .counter-note {
+      margin-top: 8px !important;
+      max-width: 540px;
+      color: #94a3b8;
+      font-size: 0.8rem;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 45px 20px;
+      }
+
+      h1 {
+        font-size: 2.3rem;
+      }
     }
   </style>
 </head>
+
 <body>
   <main>
     <h1>Blake Culbertson</h1>
@@ -63,9 +110,68 @@
     </p>
 
     <div class="links">
-      <a href="https://github.com/xizbow1">GitHub</a>
-      <a href="/redactedresume.pdf" target="_blank" rel="noopener">View my résumé (PDF)</a>
+      <a href="https://github.com/xizbow1">
+        GitHub
+      </a>
+
+      <a
+        href="/redactedresume.pdf"
+        target="_blank"
+        rel="noopener"
+      >
+        View my résumé (PDF)
+      </a>
     </div>
+
+    <!-- Visitor counter -->
+    <section class="visitor-counter" aria-label="Visitor counter">
+      <p class="counter-label">
+        You are visitor
+        <span id="visitor-count" aria-live="polite">#...</span>
+      </p>
+
+      <p class="counter-note">
+        This counter tracks page loads, not unique visitors.
+        Automated bots, web crawlers, and repeat visits may
+        artificially inflate the count.
+      </p>
+    </section>
   </main>
+
+  <!-- Fetch visitor count from Cloudflare Worker -->
+  <script>
+    async function updateVisitorCount() {
+      const counter = document.getElementById("visitor-count");
+
+      try {
+        const response = await fetch("/api/visit", {
+          method: "POST",
+          cache: "no-store"
+        });
+
+        if (!response.ok) {
+          throw new Error(
+            "Visitor counter request failed: " + response.status
+          );
+        }
+
+        const data = await response.json();
+        const visits = Number(data.visits);
+
+        if (!Number.isSafeInteger(visits) || visits < 1) {
+          throw new Error("Invalid visitor count received");
+        }
+
+        counter.textContent =
+          "#" + visits.toLocaleString("en-US");
+
+      } catch (error) {
+        counter.textContent = "unavailable";
+        console.error("Visitor counter error:", error);
+      }
+    }
+
+    updateVisitorCount();
+  </script>
 </body>
 </html>
